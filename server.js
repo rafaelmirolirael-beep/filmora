@@ -395,7 +395,7 @@ function sanitizeStream(stream) {
   const fallbackTitle = [stream.name, stream.title].filter(Boolean).join("\n");
   const peerCount = extractPeerCount(stream);
 
-  next.name = sanitizeBrandOnly(stream.name || BRAND) || BRAND;
+  next.name = formatStreamName(stream.name || BRAND);
   next.title = sanitizeBrandOnly(stream.title || fallbackTitle || BRAND);
   next.title = appendPeerInfo(next.title, peerCount);
 
@@ -411,7 +411,9 @@ function sanitizeStream(stream) {
   if (stream.behaviorHints && typeof stream.behaviorHints === "object") {
     next.behaviorHints = { ...stream.behaviorHints };
     for (const [key, value] of Object.entries(next.behaviorHints)) {
-      if (typeof value === "string") {
+      if (shouldBrandBehaviorHintKey(key)) {
+        next.behaviorHints[key] = BRAND;
+      } else if (typeof value === "string") {
         next.behaviorHints[key] = sanitizeBrandOnly(value);
       }
     }
@@ -565,6 +567,42 @@ function sanitizeBrandOnly(value) {
     .replace(/[ \t]{2,}/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+function formatStreamName(value) {
+  const cleaned = sanitizeText(value || "");
+  const brandPattern = new RegExp(`^${escapeRegex(BRAND)}(?:\\b|\\s|$)`, "i");
+  if (brandPattern.test(cleaned)) {
+    return cleaned.replace(
+      new RegExp(`^${escapeRegex(BRAND)}[ \\t]+(?=(?:4k|2160p|1080p|720p|480p|web|blu|hdr|dv|x26|hevc|av1))`, "i"),
+      `${BRAND}\n`
+    );
+  }
+
+  const descriptor = extractStreamNameDescriptor(value) || extractStreamNameDescriptor(cleaned);
+  return descriptor ? `${BRAND}\n${descriptor}` : BRAND;
+}
+
+function extractStreamNameDescriptor(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const lines = value
+    .split(/\r?\n/)
+    .map((line) => sanitizeBrandOnly(line).trim())
+    .filter(Boolean);
+
+  if (lines.length > 1) {
+    return lines.slice(1).join("\n");
+  }
+
+  const match = (lines[0] || "").match(/\b(?:4k|2160p|1080p|720p|480p|web(?:rip|[- .]?dl)?|blu(?:ray)?|hdr10\+?|hdr|dv|x26[45]|hevc|av1)\b.*$/i);
+  return match ? match[0].trim() : "";
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function dedupeStreams(streams) {
