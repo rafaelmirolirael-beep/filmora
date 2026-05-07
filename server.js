@@ -8,7 +8,7 @@ const { URL } = require("url");
 const BRAND = "Filmora";
 const PORT = Number(process.env.PORT || 7200);
 const UPSTREAM_TIMEOUT_MS = Number(process.env.UPSTREAM_TIMEOUT_MS || 12000);
-const LOGO_PATH = path.join(__dirname, "assets", "filmora-logo.png");
+const LOGO_PATH = path.join(__dirname, "filmora-logo.png");
 
 const CATALOG_UPSTREAMS = [
   {
@@ -597,17 +597,11 @@ function sortStreamsByPeers(streams) {
 }
 
 function logoSvg() {
-  try {
-    const logoBase64 = fs.readFileSync(LOGO_PATH).toString("base64");
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <image width="512" height="512" href="data:image/png;base64,${logoBase64}" preserveAspectRatio="xMidYMid meet"/>
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#111827"/>
+  <path d="M117 139h278L279 256l116 117H117l116-117L117 139Z" fill="#b91c1c"/>
+  <path d="M156 173h158L198 339h158" fill="none" stroke="#fff7ed" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
-  } catch {
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#081f38"/>
-  <text x="256" y="278" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="800" fill="#19d3d0">${BRAND}</text>
-</svg>`;
-  }
 }
 
 function backgroundSvg() {
