@@ -332,7 +332,8 @@ async function fetchJson(url) {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        Accept: "application/json"
+        Accept: "application/json",
+        "User-Agent": `${BRAND}/1.0 StremioAddon`
       }
     });
 
