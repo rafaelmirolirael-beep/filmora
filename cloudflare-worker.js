@@ -448,8 +448,8 @@ function sanitizeStream(stream) {
   const fallbackTitle = [stream.name, stream.title].filter(Boolean).join("\n");
   const peerCount = extractPeerCount(stream);
 
-  next.name = BRAND;
-  next.title = sanitizeText(stream.title || fallbackTitle || BRAND);
+  next.name = sanitizeBrandOnly(stream.name || BRAND) || BRAND;
+  next.title = sanitizeBrandOnly(stream.title || fallbackTitle || BRAND);
   next.title = appendPeerInfo(next.title, peerCount);
 
   if (!next.title || next.title === BRAND) {
@@ -458,16 +458,14 @@ function sanitizeStream(stream) {
   }
 
   if (typeof stream.description === "string") {
-    next.description = sanitizeText(stream.description);
+    next.description = sanitizeBrandOnly(stream.description);
   }
 
   if (stream.behaviorHints && typeof stream.behaviorHints === "object") {
     next.behaviorHints = { ...stream.behaviorHints };
     for (const [key, value] of Object.entries(next.behaviorHints)) {
-      if (shouldBrandBehaviorHintKey(key)) {
-        next.behaviorHints[key] = BRAND;
-      } else if (typeof value === "string") {
-        next.behaviorHints[key] = sanitizeText(value);
+      if (typeof value === "string") {
+        next.behaviorHints[key] = sanitizeBrandOnly(value);
       }
     }
   }
@@ -600,6 +598,23 @@ function sanitizeText(value) {
     .replace(/(\u{1F4E1}\s*)[^\n]+/gu, `$1${BRAND}`)
     .replace(/\[\s*ZOOMFLIX\s*\]/gi, BRAND)
     .replace(/\(\s*ZOOMFLIX\s*\)/gi, BRAND)
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function sanitizeBrandOnly(value) {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  return value
+    .replace(/\bhome\s*flix\b/gi, BRAND)
+    .replace(/\bhomeflix\b/gi, BRAND)
+    .replace(/\[\s*ZOOMFLIX\s*\]/gi, BRAND)
+    .replace(/\(\s*ZOOMFLIX\s*\)/gi, BRAND)
+    .replace(/\bzoom\s*flix\b/gi, BRAND)
+    .replace(/\bzoomflix\b/gi, BRAND)
     .replace(/[ \t]{2,}/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
